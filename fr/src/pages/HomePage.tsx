@@ -52,7 +52,7 @@ export const HomePage = () => {
               delay: 0.2 
             }}
           >
-            Transform Ideas Into{' '}
+            Blend Your Cursor{' '}
             <motion.span 
               className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent"
               initial={{ opacity: 0, scale: 0.8 }}
@@ -64,7 +64,7 @@ export const HomePage = () => {
                 delay: 0.5 
               }}
             >
-              Animated Flowcharts
+              Animated 2D Flowcharts
             </motion.span>
           </motion.h1>
           

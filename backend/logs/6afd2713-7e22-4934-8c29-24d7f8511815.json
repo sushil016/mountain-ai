@@ -1,0 +1,7 @@
+{
+  "video_id": "6afd2713-7e22-4934-8c29-24d7f8511815",
+  "timestamp": "2025-07-20T17:02:20.983122",
+  "prompt": "create flowchart of Baisc ui layout",
+  "success": false,
+  "error": "'VideoProcessor' object has no attribute 'optimize_video'"
+}

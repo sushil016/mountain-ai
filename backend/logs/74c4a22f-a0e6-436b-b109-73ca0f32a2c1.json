@@ -1,0 +1,7 @@
+{
+  "video_id": "74c4a22f-a0e6-436b-b109-73ca0f32a2c1",
+  "timestamp": "2025-07-20T16:30:14.288682",
+  "prompt": "Data processing: Start -> Load Data -> Clean Data -> Analyze -> Generate Report -> End",
+  "success": false,
+  "error": "'VideoProcessor' object has no attribute 'optimize_video'"
+}

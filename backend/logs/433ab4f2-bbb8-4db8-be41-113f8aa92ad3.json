@@ -1,0 +1,7 @@
+{
+  "video_id": "433ab4f2-bbb8-4db8-be41-113f8aa92ad3",
+  "timestamp": "2025-07-20T16:19:02.193289",
+  "prompt": "Simple login workflow: Start -> Enter Username -> Enter Password -> Validate -> Success or Retry -> End",
+  "success": false,
+  "error": "Manim rendering failed (code 2): Usage: python -m manim render [OPTIONS] FILE [SCENE_NAMES]...\nTry 'python -m manim render --help' for help.\n\nError: Invalid value for '-q' / '--quality': 'medium_quality' is not one of 'l', 'm', 'h', 'p', 'k'.\n"
+}

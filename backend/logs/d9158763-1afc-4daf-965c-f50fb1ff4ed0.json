@@ -1,0 +1,7 @@
+{
+  "video_id": "d9158763-1afc-4daf-965c-f50fb1ff4ed0",
+  "timestamp": "2025-07-20T17:01:39.229181",
+  "prompt": "create flowchart of git basic",
+  "success": false,
+  "error": "'VideoProcessor' object has no attribute 'optimize_video'"
+}

@@ -1,0 +1,7 @@
+{
+  "video_id": "337e1a7d-223a-40a2-a234-4e837462b00e",
+  "timestamp": "2025-07-20T16:07:00.734402",
+  "prompt": "Login process: Start -> Enter Username -> Enter Password -> Authenticate -> Success or Error -> End",
+  "success": false,
+  "error": "'FlowchartConnection' object has no attribute 'edge_type'"
+}

@@ -1,0 +1,7 @@
+{
+  "video_id": "9aad5156-34c3-421d-84f2-979f07ef27ab",
+  "timestamp": "2025-07-20T16:03:47.466936",
+  "prompt": "Simple process: Start -> Check Input -> Process Data -> Output Result -> End",
+  "success": false,
+  "error": "'FlowchartNode' object has no attribute 'node_type'"
+}

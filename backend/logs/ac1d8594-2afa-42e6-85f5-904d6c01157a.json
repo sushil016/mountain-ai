@@ -1,0 +1,7 @@
+{
+  "video_id": "ac1d8594-2afa-42e6-85f5-904d6c01157a",
+  "timestamp": "2025-07-20T16:55:02.463940",
+  "prompt": "create a jwt auth flowchart",
+  "success": false,
+  "error": "'VideoProcessor' object has no attribute 'optimize_video'"
+}

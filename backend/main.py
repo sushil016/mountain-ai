@@ -7,6 +7,7 @@ import uuid
 from pathlib import Path
 from typing import Optional, Dict, Any
 import logging
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, status, BackgroundTasks, Depends
 from fastapi.responses import FileResponse, JSONResponse
@@ -64,13 +65,46 @@ except ImportError:
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Initialize FastAPI app
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Manage application lifespan events."""
+    # Startup
+    logger.info("Starting Flowchart Video Generator API...")
+    
+    # Check available features
+    features = []
+    if PROMPT_PARSER_AVAILABLE:
+        features.append("prompt parsing")
+    if MANIM_AVAILABLE:
+        features.append("video generation")
+    if VIDEO_PROCESSOR_AVAILABLE:
+        features.append("video processing")
+    if MIDDLEWARE_AVAILABLE:
+        features.append("advanced security")
+    if UTILS_AVAILABLE:
+        features.append("system monitoring")
+    
+    logger.info(f"Available features: {', '.join(features) if features else 'basic API only'}")
+    
+    # Start background cleanup task if available
+    if UTILS_AVAILABLE:
+        asyncio.create_task(async_cleanup_task())
+    
+    logger.info("API startup complete")
+    
+    yield  # App runs here
+    
+    # Shutdown
+    logger.info("Shutting down Flowchart Video Generator API...")
+
+# Initialize FastAPI app with lifespan
 app = FastAPI(
     title=API_TITLE,
     version=API_VERSION,
     description=API_DESCRIPTION,
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan
 )
 
 # Setup middleware if available
@@ -156,39 +190,6 @@ def simple_validate_prompt(prompt: str) -> str:
         )
     
     return prompt.strip()
-
-
-@app.on_event("startup")
-async def startup_event():
-    """Initialize application on startup."""
-    logger.info("Starting Flowchart Video Generator API...")
-    
-    # Check available features
-    features = []
-    if PROMPT_PARSER_AVAILABLE:
-        features.append("prompt parsing")
-    if MANIM_AVAILABLE:
-        features.append("video generation")
-    if VIDEO_PROCESSOR_AVAILABLE:
-        features.append("video processing")
-    if MIDDLEWARE_AVAILABLE:
-        features.append("advanced security")
-    if UTILS_AVAILABLE:
-        features.append("system monitoring")
-    
-    logger.info(f"Available features: {', '.join(features) if features else 'basic API only'}")
-    
-    # Start background cleanup task if available
-    if UTILS_AVAILABLE:
-        asyncio.create_task(async_cleanup_task())
-    
-    logger.info("API startup complete")
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Cleanup on shutdown."""
-    logger.info("Shutting down Flowchart Video Generator API...")
 
 
 @app.get("/", response_model=Dict[str, str])
@@ -349,20 +350,18 @@ async def generate_video_background(
         
         if result.success:
             # Update status
-            generation_status[video_id] = "optimizing"
-            
-            # Optimize video if processor is available
-            if VIDEO_PROCESSOR_AVAILABLE:
-                video_path = Path(result.video_path)
-                optimized_path = await video_processor.optimize_video(video_path)
-            
-            # Update status
             generation_status[video_id] = "completed"
             
             # Log successful generation
             if UTILS_AVAILABLE:
                 save_generation_log(
-                    video_id, prompt, True, result.generation_time
+                    video_id, {
+                        "prompt": prompt,
+                        "success": True,
+                        "generation_time": result.generation_time,
+                        "video_path": result.video_path,
+                        "has_audio": result.has_audio
+                    }
                 )
             
             logger.info(f"Video generation completed for {video_id}")
@@ -443,13 +442,21 @@ async def generate_video_with_audio_background(
         else:
             generation_status[video_id] = "failed"
             if UTILS_AVAILABLE:
-                save_generation_log(video_id, prompt, False, error=result.error_message)
+                save_generation_log(video_id, {
+                    "prompt": prompt,
+                    "success": False,
+                    "error": result.error_message
+                })
             logger.error(f"Video generation failed for {video_id}: {result.error_message}")
             
     except Exception as e:
         generation_status[video_id] = "failed"
         if UTILS_AVAILABLE:
-            save_generation_log(video_id, prompt, False, error=str(e))
+            save_generation_log(video_id, {
+                "prompt": prompt,
+                "success": False,
+                "error": str(e)
+            })
         logger.error(f"Background generation error for {video_id}: {e}")
 
 

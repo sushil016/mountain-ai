@@ -1,16 +1,21 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Play, Download, Sparkles, FileText, Video, X, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Play, Download, Sparkles, FileText, Video, X } from 'lucide-react';
+import { apiService, type VideoGenerationRequest, type VideoGenerationResponse } from '@/lib/api';
+import { ErrorModal } from '@/components/ui/error-modal';
+import { VideoPlayer } from '@/components/ui/video-player';
+import { PulsingDots, MagicSpinner, FloatingElements, WaveLoader, ParticleField } from '@/components/ui/loading-components';
 
 export const GenerateFlowchartPage: React.FC = () => {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [generatedFlowchart, setGeneratedFlowchart] = useState<any>(null);
+  const [generatedVideo, setGeneratedVideo] = useState<VideoGenerationResponse | null>(null);
   const [uploadedImages, setUploadedImages] = useState<File[]>([]);
   const [typingText, setTypingText] = useState('');
   const [showSplitView, setShowSplitView] = useState(false);
   const [messages, setMessages] = useState<Array<{id: string, type: 'ai' | 'user', content: string, images?: File[]}>>([]);
+  const [error, setError] = useState<{ title: string; message: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -73,35 +78,118 @@ export const GenerateFlowchartPage: React.FC = () => {
     setShowSplitView(true);
     setIsGenerating(true);
     setProgress(0);
+    setError(null);
+    setGeneratedVideo(null);
     
     // Clear the input
+    const currentPrompt = prompt;
     setPrompt('');
     setUploadedImages([]);
     
-    // Simulate AI generation progress
-    const progressInterval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(progressInterval);
-          setIsGenerating(false);
-          setGeneratedFlowchart({
-            title: "Generated Flowchart",
-            duration: "2.3s",
-            format: "MP4 • 1080p"
-          });
-          
-          // Add AI success message
-          setMessages(prev => [...prev, {
-            id: (Date.now() + 1).toString(),
-            type: 'ai',
-            content: "Perfect! I've created your animated flowchart. You can preview it on the right and export it in various formats."
-          }]);
-          
-          return 100;
+    try {
+      // Check backend health first
+      await apiService.checkHealth();
+      
+      // Prepare request with correct quality format
+      const request: VideoGenerationRequest = {
+        prompt: currentPrompt,
+        quality: 'high_quality', // Use backend's expected format
+        format: 'mp4',
+        include_audio: true
+      };
+      
+      // Start progress animation
+      let progressValue = 0;
+      const progressInterval = setInterval(() => {
+        if (progressValue < 20) {
+          progressValue += Math.random() * 5; // Slow start
+        } else if (progressValue < 50) {
+          progressValue += Math.random() * 3; // Medium pace
+        } else if (progressValue < 80) {
+          progressValue += Math.random() * 2; // Slower as we wait
+        } else {
+          progressValue += Math.random() * 1; // Very slow near completion
         }
-        return prev + 10;
-      });
-    }, 300);
+        progressValue = Math.min(progressValue, 85); // Cap at 85% until completion
+        setProgress(progressValue);
+      }, 2000); // Update every 2 seconds
+      
+      // Generate video
+      const response = await apiService.generateVideo(request);
+      
+      if (response.success && response.video_id) {
+        // Video generation started, now poll for completion
+        const estimatedDuration = response.complexity_analysis?.estimated_duration || 30;
+        setMessages(prev => [...prev, {
+          id: (Date.now() + 1).toString(),
+          type: 'ai',
+          content: `Great! I'm now generating your flowchart video. This will take approximately ${estimatedDuration} seconds. I'll let you know when it's ready!`
+        }]);
+        
+        // Poll for completion
+        try {
+          const completionResult = await apiService.waitForVideoCompletion(response.video_id);
+          clearInterval(progressInterval);
+          
+          if (completionResult.success && completionResult.video_path) {
+            setProgress(100);
+            
+            // Create a complete response object
+            const completeResponse: VideoGenerationResponse = {
+              ...response,
+              status: 'completed',
+              video_path: completionResult.video_path,
+              audio_path: completionResult.audio_path
+            };
+            
+            setGeneratedVideo(completeResponse);
+            
+            // Add AI success message
+            setMessages(prev => [...prev, {
+              id: (Date.now() + 2).toString(),
+              type: 'ai',
+              content: "Perfect! Your animated flowchart is ready! You can preview it on the right and download it in various formats."
+            }]);
+          } else {
+            throw new Error(completionResult.error || 'Video generation failed during processing');
+          }
+        } catch (pollError) {
+          clearInterval(progressInterval);
+          throw pollError;
+        }
+      } else {
+        clearInterval(progressInterval);
+        throw new Error(response.error || 'Failed to start video generation');
+      }
+    } catch (err) {
+      console.error('Video generation error:', err);
+      
+      let errorMessage = 'An unexpected error occurred while generating your video.';
+      let errorTitle = 'Generation Failed';
+      
+      if (err instanceof Error) {
+        if (err.message.includes('Network Error') || err.message.includes('timeout')) {
+          errorTitle = 'Connection Error';
+          errorMessage = 'Unable to connect to the server. Please check your internet connection and try again.';
+        } else if (err.message.includes('500')) {
+          errorTitle = 'Server Error';
+          errorMessage = 'The server encountered an error while processing your request. Please try again later.';
+        } else {
+          errorMessage = err.message;
+        }
+      }
+      
+      setError({ title: errorTitle, message: errorMessage });
+      
+      // Add AI error message
+      setMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        type: 'ai',
+        content: `Sorry, I encountered an error while generating your flowchart: ${errorMessage}`
+      }]);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleAttachClick = () => {
@@ -135,9 +223,9 @@ export const GenerateFlowchartPage: React.FC = () => {
     setUploadedImages(prev => prev.filter((_, i) => i !== index));
   };
 
-  const openVideoInNewTab = () => {
-    // In a real implementation, this would open the actual video file
-    window.open('/generated-flowchart-preview.html', '_blank');
+  const handleRetry = () => {
+    setError(null);
+    handleGenerate();
   };
 
   const exportFormats = [
@@ -167,10 +255,10 @@ export const GenerateFlowchartPage: React.FC = () => {
         }}
       />
       
-      <div className="relative z-10 pt-44 pb-20 px-4">
+      <div className="relative z-10 pt-24 pb-16 px-4">
         {!showSplitView ? (
           // Initial Simple Input Interface - Lovable Style
-          <div className="max-w-5xl mx-auto">
+          <div className="max-w-7xl mx-auto min-h-[80vh] flex flex-col justify-center">
             {/* Header - Lovable Style */}
             <motion.div
               className="text-center mb-12"
@@ -195,7 +283,7 @@ export const GenerateFlowchartPage: React.FC = () => {
 
             {/* Main Input Interface - Lovable Style */}
             <motion.div
-              className="max-w-4xl mx-auto"
+              className="w-[100vh] mx-auto"
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
@@ -333,11 +421,11 @@ export const GenerateFlowchartPage: React.FC = () => {
           </div>
         ) : (
           // Split View - Chat + Preview
-          <div className="max-w-7xl mx-auto h-[calc(100vh-12rem)]">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-[70vh]">
               {/* Left Side - Chat Interface */}
               <motion.div
-                className="bg-white/5 backdrop-blur-2xl rounded-3xl border border-white/10 shadow-2xl flex flex-col"
+                className="bg-white/5 backdrop-blur-2xl rounded-3xl border border-white/10 shadow-2xl flex flex-col min-h-[600px]"
                 initial={{ opacity: 0, x: -50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6 }}
@@ -483,7 +571,7 @@ export const GenerateFlowchartPage: React.FC = () => {
 
               {/* Right Side - Preview */}
               <motion.div
-                className="bg-white/5 backdrop-blur-2xl rounded-3xl border border-white/10 shadow-2xl flex flex-col"
+                className="bg-white/5 backdrop-blur-2xl rounded-3xl border border-white/10 shadow-2xl flex flex-col min-h-[600px]"
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
@@ -497,100 +585,85 @@ export const GenerateFlowchartPage: React.FC = () => {
                   </h2>
                 </div>
 
-                <div className="flex-1 p-6">
-                  {!generatedFlowchart ? (
+                <div className="flex-1 p-6 overflow-y-auto">
+                  {!generatedVideo ? (
                     <div className="h-full flex items-center justify-center">
-                      <div className="text-center text-white/50">
-                        <Play className="w-16 h-16 mx-auto mb-4 opacity-30" />
-                        <p className="text-lg">Your animated flowchart will appear here</p>
-                        <p className="text-sm mt-2">Start a conversation to generate your flowchart</p>
-                      </div>
+                      {isGenerating ? (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="text-center text-white relative"
+                        >
+                          {/* Floating background elements */}
+                          <FloatingElements className="absolute inset-0 w-full h-full" />
+                          <ParticleField className="absolute inset-0 w-full h-full" />
+                          
+                          <div className="relative z-10 mb-6">
+                            <MagicSpinner size="lg" className="mx-auto mb-4" />
+                            <WaveLoader className="justify-center mb-4" />
+                            <PulsingDots className="justify-center mb-4" />
+                          </div>
+                          <h3 className="text-xl font-semibold mb-2 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                            Generating your flowchart...
+                          </h3>
+                          <p className="text-white/60 mb-4">This may take a few moments</p>
+                          <div className="w-64 bg-white/10 rounded-full h-2 mx-auto relative overflow-hidden">
+                            <motion.div
+                              className="bg-gradient-to-r from-blue-400 to-purple-400 h-full rounded-full relative"
+                              initial={{ width: 0 }}
+                              animate={{ width: `${progress}%` }}
+                              transition={{ duration: 0.5 }}
+                            >
+                              {/* Shimmering effect */}
+                              <motion.div
+                                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                                animate={{ x: ['-100%', '200%'] }}
+                                transition={{
+                                  duration: 2,
+                                  repeat: Infinity,
+                                  ease: "linear"
+                                }}
+                              />
+                            </motion.div>
+                          </div>
+                          <p className="text-white/40 text-sm mt-2">{progress}% complete</p>
+                        </motion.div>
+                      ) : (
+                        <div className="text-center text-white/50">
+                          <Play className="w-16 h-16 mx-auto mb-4 opacity-30" />
+                          <p className="text-lg">Your animated flowchart will appear here</p>
+                          <p className="text-sm mt-2">Start a conversation to generate your flowchart</p>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <motion.div
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="h-full flex flex-col"
+                      className="h-full flex flex-col p-2"
                     >
-                      {/* Video Preview */}
-                      <div className="aspect-video bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg border border-white/20 flex items-center justify-center relative overflow-hidden mb-6">
-                        {/* Animated flowchart simulation */}
-                        <div className="absolute inset-4">
-                          <svg className="w-full h-full" viewBox="0 0 400 200">
-                            <motion.circle
-                              cx="50" cy="50" r="20"
-                              fill="#3b82f6"
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ delay: 0.5 }}
-                            />
-                            <motion.rect
-                              x="150" y="30" width="100" height="40" rx="5"
-                              fill="#8b5cf6"
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ delay: 0.8 }}
-                            />
-                            <motion.circle
-                              cx="350" cy="50" r="20"
-                              fill="#10b981"
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ delay: 1.1 }}
-                            />
-                            <motion.path
-                              d="M70 50 L150 50"
-                              stroke="#ffffff"
-                              strokeWidth="2"
-                              fill="none"
-                              initial={{ pathLength: 0 }}
-                              animate={{ pathLength: 1 }}
-                              transition={{ delay: 0.6, duration: 0.5 }}
-                            />
-                            <motion.path
-                              d="M250 50 L330 50"
-                              stroke="#ffffff"
-                              strokeWidth="2"
-                              fill="none"
-                              initial={{ pathLength: 0 }}
-                              animate={{ pathLength: 1 }}
-                              transition={{ delay: 0.9, duration: 0.5 }}
-                            />
-                          </svg>
-                        </div>
-                        <div className="absolute top-4 left-4 bg-black/50 rounded-full p-2">
-                          <Play className="w-4 h-4 text-white" />
-                        </div>
-                      </div>
-                      
-                      {/* Video Controls */}
-                      <div className="flex items-center justify-between mb-6">
-                        <div>
-                          <h3 className="text-lg font-semibold text-white">
-                            {generatedFlowchart.title}
-                          </h3>
-                          <p className="text-white/60 text-sm">
-                            {generatedFlowchart.duration} • {generatedFlowchart.format}
-                          </p>
-                        </div>
-                        <div className="flex gap-2">
-                          <button 
-                            onClick={openVideoInNewTab}
-                            className="px-3 py-2 bg-white/[0.08] hover:bg-white/[0.12] border border-white/[0.12] text-white rounded-lg transition-colors flex items-center gap-2"
-                          >
-                            <ExternalLink className="w-4 h-4" />
-                            <span className="hidden sm:inline">Open</span>
-                          </button>
-                          <button className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center gap-2">
-                            <Play className="w-4 h-4" />
-                            Play
-                          </button>
-                        </div>
+                      {/* Video Player */}
+                      <div className="flex-shrink-0 mb-6">
+                        <VideoPlayer
+                          videoUrl={apiService.getVideoUrl(generatedVideo.video_path!)}
+                          audioUrl={generatedVideo.audio_path ? apiService.getAudioUrl(generatedVideo.audio_path) : undefined}
+                          title={`Generated: ${messages[0]?.content || 'Flowchart Animation'}`}
+                          onDownload={() => {
+                            // Create download link
+                            const link = document.createElement('a');
+                            link.href = apiService.getVideoUrl(generatedVideo.video_path!);
+                            link.download = `flowchart-${Date.now()}.mp4`;
+                            link.click();
+                          }}
+                          onOpenInNewTab={() => {
+                            window.open(apiService.getVideoUrl(generatedVideo.video_path!), '_blank');
+                          }}
+                        />
                       </div>
 
                       {/* Export Options */}
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                      <div className="flex-1 min-h-0">
+                        <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
                           <div className="p-1.5 bg-green-500/20 rounded-lg">
                             <Download className="w-5 h-5 text-green-400" />
                           </div>
@@ -602,7 +675,7 @@ export const GenerateFlowchartPage: React.FC = () => {
                             <motion.button
                               key={index}
                               className="w-full p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg transition-all duration-200 flex items-center justify-between"
-                              whileHover={{ x: 5 }}
+                              whileHover={{ x: 3 }}
                             >
                               <div className="flex items-center gap-3">
                                 {format.icon}
@@ -624,6 +697,15 @@ export const GenerateFlowchartPage: React.FC = () => {
           </div>
         )}
       </div>
+      
+      {/* Error Modal */}
+      <ErrorModal
+        isOpen={error !== null}
+        onClose={() => setError(null)}
+        title={error?.title || 'Error'}
+        message={error?.message || 'An unexpected error occurred'}
+        onRetry={handleRetry}
+      />
     </div>
   );
 };

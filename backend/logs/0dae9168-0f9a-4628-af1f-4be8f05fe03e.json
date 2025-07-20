@@ -1,0 +1,7 @@
+{
+  "video_id": "0dae9168-0f9a-4628-af1f-4be8f05fe03e",
+  "timestamp": "2025-07-20T16:56:21.521970",
+  "prompt": "create a hash password flowchart",
+  "success": false,
+  "error": "'VideoProcessor' object has no attribute 'optimize_video'"
+}

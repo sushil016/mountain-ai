@@ -1,0 +1,7 @@
+{
+  "video_id": "e29b6f1a-ad56-48f5-a3de-bb9f9bd77fa9",
+  "timestamp": "2025-07-20T16:20:16.081469",
+  "prompt": "User registration: Start -> Enter Email -> Enter Password -> Confirm Password -> Validate -> Create Account -> Success -> End",
+  "success": false,
+  "error": "'VideoProcessor' object has no attribute 'optimize_video'"
+}

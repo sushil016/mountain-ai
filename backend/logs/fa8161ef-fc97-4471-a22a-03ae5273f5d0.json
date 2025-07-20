@@ -1,0 +1,7 @@
+{
+  "video_id": "fa8161ef-fc97-4471-a22a-03ae5273f5d0",
+  "timestamp": "2025-07-20T16:47:13.484566",
+  "prompt": "create a video of jwt aythentication",
+  "success": false,
+  "error": "'VideoProcessor' object has no attribute 'optimize_video'"
+}

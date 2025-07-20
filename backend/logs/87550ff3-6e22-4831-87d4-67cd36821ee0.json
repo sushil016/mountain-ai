@@ -1,0 +1,7 @@
+{
+  "video_id": "87550ff3-6e22-4831-87d4-67cd36821ee0",
+  "timestamp": "2025-07-20T16:05:28.121814",
+  "prompt": "Simple workflow: Start -> Input Data -> Validate -> Process -> Output -> End",
+  "success": false,
+  "error": "'FlowchartStructure' object has no attribute 'edges'"
+}

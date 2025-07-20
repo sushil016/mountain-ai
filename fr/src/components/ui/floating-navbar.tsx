@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { AuthModal } from "../auth/auth-modal";
 import { InteractiveHoverButton } from "@/components/magicui/interactive-hover-button";
@@ -28,26 +29,34 @@ export const FloatingNavbar: React.FC<FloatingNavbarProps> = ({ className }) => 
     <>
       <nav
         className={cn(
-          "fixed top-4 left-1/2 z-50 px-8 py-4 rounded-2xl transition-all duration-300 w-full max-w-7xl",
+          "fixed top-4 left-1/2 z-50 px-6 py-3 rounded-2xl transition-all duration-300",
           "bg-white/10 backdrop-blur-md border border-white/20",
-          isScrolled ? "py-3 px-6" : "",
+          "w-[95vw] max-w-6xl",
+          isScrolled ? "py-2.5 px-5" : "px-8 py-4",
           className
         )}
         style={{
           transform: "translateX(-50%)",
+          left: "50%",
         }}
       >
-        <div className="flex items-center justify-between w-full max-w-6xl mx-auto">
+        <div className="flex items-center justify-between w-full px-2">
           {/* Logo */}
-          <div className="flex items-center space-x-3">
+          <motion.div 
+            className="flex items-center space-x-3 flex-shrink-0"
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.2 }}
+          >
             <Link to="/" className="flex items-center space-x-3">
-              <img
+              <motion.img
                 src="/mountainai.png"
                 alt="Mountain AI"
                 className={cn(
                   "transition-all duration-300",
                   isScrolled ? "w-8 h-8" : "w-10 h-10"
                 )}
+                whileHover={{ rotate: 5 }}
+                transition={{ duration: 0.2 }}
               />
               <div className={cn(
                 "pixel-text transition-all duration-300 text-blue-500",
@@ -56,10 +65,10 @@ export const FloatingNavbar: React.FC<FloatingNavbarProps> = ({ className }) => 
                 MOUNTAIN AI
               </div>
             </Link>
-          </div>
+          </motion.div>
 
           {/* Navigation Items - Centered */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden lg:flex items-center space-x-6 flex-1 justify-center">
             <NavItem to="/">Home</NavItem>
             <NavItem to="/generate-flowchart">Generate</NavItem>
             <NavItem to="/about">About</NavItem>
@@ -69,7 +78,7 @@ export const FloatingNavbar: React.FC<FloatingNavbarProps> = ({ className }) => 
           </div>
 
           {/* Right side - GitHub Stars & CTA */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3 flex-shrink-0">
             {/* GitHub Stars */}
             <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-black/20 border border-white/10">
               <svg 
@@ -86,8 +95,8 @@ export const FloatingNavbar: React.FC<FloatingNavbarProps> = ({ className }) => 
             <InteractiveHoverButton
               onClick={() => setIsAuthModalOpen(true)}
               className={cn(
-                "px-6 py-2 font-medium rounded-full duration-200 ",
-                isScrolled ? "text-sm px-4 py-1.5" : "text-sm"
+                "px-4 py-2 font-medium rounded-full duration-200 text-sm whitespace-nowrap",
+                isScrolled ? "px-3 py-1.5" : ""
               )}
             >
              {"@"} Login

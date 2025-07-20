@@ -1,0 +1,7 @@
+{
+  "video_id": "e12806b5-0fc6-43f2-991c-ece4d14f3e4c",
+  "timestamp": "2025-07-20T16:49:32.821194",
+  "prompt": "E-commerce Checkout: Browse Products -> Add to Cart -> Review Cart -> Enter Payment -> Process Payment -> Order Confirmation",
+  "success": false,
+  "error": "'VideoProcessor' object has no attribute 'optimize_video'"
+}
