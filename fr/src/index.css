@@ -1,0 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-1: #ff6b6b;
+    --color-2: #4ecdc4;
+    --color-3: #45b7d1;
+    --color-4: #96ceb4;
+    --color-5: #ffeaa7;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    background-color: #0a0a0a;
+    color: white;
+    overflow-x: hidden;
+  }
+}
+
+@layer components {
+  .glass-morphism {
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .text-gradient {
+    color: #3b82f6;
+  }
+  
+  .pixel-text {
+    font-family: 'VT323', monospace;
+    font-size: 2.25rem;
+    letter-spacing: 0.1em;
+    -webkit-font-smoothing: none;
+  }
+}
+
+@layer utilities {
+  .animate-shrink {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  @keyframes rainbow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  
+  .animate-rainbow {
+    animation: rainbow 3s ease-in-out infinite;
+  }
+}

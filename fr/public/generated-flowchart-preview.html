@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generated Flowchart Preview - Mountain AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3a 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .header {
+            margin-bottom: 40px;
+        }
+        
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #3b82f6, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .title {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+        
+        .subtitle {
+            opacity: 0.7;
+            font-size: 1rem;
+        }
+        
+        .video-container {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(20px);
+            margin-bottom: 30px;
+        }
+        
+        .flowchart-preview {
+            aspect-ratio: 16/9;
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .play-button {
+            width: 80px;
+            height: 80px;
+            background: rgba(59, 130, 246, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: absolute;
+            z-index: 2;
+        }
+        
+        .play-button:hover {
+            background: rgba(59, 130, 246, 1);
+            transform: scale(1.1);
+        }
+        
+        .play-icon {
+            width: 0;
+            height: 0;
+            border-left: 20px solid white;
+            border-top: 12px solid transparent;
+            border-bottom: 12px solid transparent;
+            margin-left: 5px;
+        }
+        
+        .flowchart-simulation {
+            position: absolute;
+            inset: 20px;
+            opacity: 0.7;
+        }
+        
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: between;
+            gap: 15px;
+        }
+        
+        .video-info {
+            text-align: left;
+        }
+        
+        .video-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .video-meta {
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+        
+        .button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .button-primary {
+            background: linear-gradient(45deg, #3b82f6, #8b5cf6);
+            color: white;
+        }
+        
+        .button-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .download-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: left;
+        }
+        
+        .download-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .download-options {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .download-option {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .download-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+        }
+        
+        .download-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .download-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            opacity: 0.7;
+        }
+        
+        .icon {
+            width: 16px;
+            height: 16px;
+            opacity: 0.8;
+        }
+        
+        /* Animated flowchart styles */
+        .node {
+            animation: nodeAppear 0.6s ease-out forwards;
+            transform-origin: center;
+        }
+        
+        .connection {
+            animation: connectionDraw 0.8s ease-out forwards;
+        }
+        
+        @keyframes nodeAppear {
+            from {
+                opacity: 0;
+                transform: scale(0);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        @keyframes connectionDraw {
+            from {
+                stroke-dasharray: 100;
+                stroke-dashoffset: 100;
+            }
+            to {
+                stroke-dasharray: 100;
+                stroke-dashoffset: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">Mountain AI</div>
+            <h1 class="title">Generated Flowchart Preview</h1>
+            <p class="subtitle">Your AI-generated animated flowchart</p>
+        </div>
+        
+        <div class="video-container">
+            <div class="flowchart-preview" id="flowchartPreview">
+                <div class="play-button" onclick="playFlowchart()">
+                    <div class="play-icon"></div>
+                </div>
+                
+                <svg class="flowchart-simulation" viewBox="0 0 400 200">
+                    <circle class="node" cx="50" cy="100" r="25" fill="#3b82f6" style="animation-delay: 0.5s;" />
+                    <rect class="node" x="150" y="75" width="100" height="50" rx="8" fill="#8b5cf6" style="animation-delay: 0.8s;" />
+                    <circle class="node" cx="350" cy="100" r="25" fill="#10b981" style="animation-delay: 1.1s;" />
+                    
+                    <line class="connection" x1="75" y1="100" x2="150" y2="100" stroke="#ffffff" stroke-width="3" style="animation-delay: 0.6s;" />
+                    <line class="connection" x1="250" y1="100" x2="325" y2="100" stroke="#ffffff" stroke-width="3" style="animation-delay: 0.9s;" />
+                    
+                    <!-- Labels -->
+                    <text x="50" y="145" text-anchor="middle" fill="white" font-size="12" opacity="0.8">Start</text>
+                    <text x="200" y="145" text-anchor="middle" fill="white" font-size="12" opacity="0.8">Process</text>
+                    <text x="350" y="145" text-anchor="middle" fill="white" font-size="12" opacity="0.8">End</text>
+                </svg>
+            </div>
+            
+            <div class="controls">
+                <div class="video-info">
+                    <div class="video-title">Generated Flowchart</div>
+                    <div class="video-meta">2.3s • MP4 • 1080p</div>
+                </div>
+                <div style="display: flex; gap: 10px; margin-left: auto;">
+                    <button class="button button-secondary" onclick="downloadFlowchart()">
+                        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                        Download
+                    </button>
+                    <button class="button button-primary" onclick="playFlowchart()">
+                        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path>
+                        </svg>
+                        Play
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="download-section">
+            <div class="download-title">
+                <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+                Export Options
+            </div>
+            
+            <div class="download-options">
+                <div class="download-option" onclick="downloadFormat('mp4')">
+                    <div class="download-info">
+                        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm3 2h6v4H7V5zm8 8v2h1v-2h-1zm-2-2H7v4h6v-4zm2 0h1V9h-1v2zm1-4V5h-1v2h1zM5 5v2H4V5h1zm0 4H4v2h1V9zm-1 4h1v2H4v-2z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span>MP4 Video</span>
+                    </div>
+                    <div class="download-meta">
+                        <span>2.1 MB</span>
+                        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                </div>
+                
+                <div class="download-option" onclick="downloadFormat('png')">
+                    <div class="download-info">
+                        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span>PNG Image</span>
+                    </div>
+                    <div class="download-meta">
+                        <span>890 KB</span>
+                        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                </div>
+                
+                <div class="download-option" onclick="downloadFormat('svg')">
+                    <div class="download-info">
+                        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span>SVG Vector</span>
+                    </div>
+                    <div class="download-meta">
+                        <span>45 KB</span>
+                        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function playFlowchart() {
+            const preview = document.getElementById('flowchartPreview');
+            const playButton = preview.querySelector('.play-button');
+            
+            // Hide play button and show playing state
+            playButton.style.display = 'none';
+            
+            // Reset animations
+            const nodes = preview.querySelectorAll('.node');
+            const connections = preview.querySelectorAll('.connection');
+            
+            nodes.forEach(node => {
+                node.style.animation = 'none';
+                setTimeout(() => {
+                    node.style.animation = 'nodeAppear 0.6s ease-out forwards';
+                }, 10);
+            });
+            
+            connections.forEach(connection => {
+                connection.style.animation = 'none';
+                setTimeout(() => {
+                    connection.style.animation = 'connectionDraw 0.8s ease-out forwards';
+                }, 10);
+            });
+            
+            // Show play button again after animation
+            setTimeout(() => {
+                playButton.style.display = 'flex';
+            }, 2500);
+        }
+        
+        function downloadFlowchart() {
+            // Simulate download
+            alert('Download started! In a real implementation, this would download the MP4 file.');
+        }
+        
+        function downloadFormat(format) {
+            // Simulate format-specific download
+            const formatNames = {
+                'mp4': 'MP4 Video',
+                'png': 'PNG Image', 
+                'svg': 'SVG Vector'
+            };
+            alert(`Downloading ${formatNames[format]}! In a real implementation, this would download the ${format.toUpperCase()} file.`);
+        }
+        
+        // Auto-play animation on load
+        window.addEventListener('load', () => {
+            setTimeout(playFlowchart, 1000);
+        });
+    </script>
+</body>
+</html>
